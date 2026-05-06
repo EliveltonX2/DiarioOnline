@@ -17,7 +17,12 @@
             <div class="card-body">
                 <h4 class="card-title text-dark font-weight-bold">{{ turma.nome }}</h4>
                 <p class="card-text text-muted mb-2">
-                    <i class="fa-solid fa-user-tie me-2"></i>{{ turma.coordenador.username|default:"Sem coordenador" }}
+                    <i class="fa-solid fa-user-tie me-2"></i>
+                    {% for coord in turma.coordenadores.all %}
+                        {{ coord.username }}{% if not forloop.last %}, {% endif %}
+                    {% empty %}
+                        Sem coordenador
+                    {% endfor %}
                 </p>
                 <div class="d-flex justify-content-between align-items-center mt-3">
                     <span class="badge bg-info rounded-pill px-3 py-2">

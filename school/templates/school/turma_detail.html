@@ -6,7 +6,13 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h2 class="text-primary font-weight-bold m-0"><i class="fa-solid fa-users me-2"></i>{{ turma.nome }}</h2>
-        <p class="text-muted m-0">Coordenador: {{ turma.coordenador.username|default:"Nenhum" }}</p>
+        <p class="text-muted m-0">Coordenadores: 
+            {% for coord in turma.coordenadores.all %}
+                {{ coord.username }}{% if not forloop.last %}, {% endif %}
+            {% empty %}
+                Nenhum
+            {% endfor %}
+        </p>
     </div>
     <div>
         <a href="{% url 'turma_edit' turma.pk %}" class="btn btn-outline-primary btn-sm rounded-pill me-2"><i class="fa-solid fa-pen"></i> Editar</a>
