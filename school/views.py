@@ -12,14 +12,14 @@ from datetime import datetime
 
 @login_required
 def dashboard(request):
-    turmas_count = Turma.objects.filter(coordenador=request.user).count()
-    alunos_count = Aluno.objects.filter(turma__coordenador=request.user).count()
+    turmas_count = Turma.objects.filter(coordenadores=request.user).count()
+    alunos_count = Aluno.objects.filter(turma__coordenadores=request.user).count()
     
     # Exemplo de lembretes: últimos registros
-    ultimos_registros = RegistroAluno.objects.filter(alunos__turma__coordenador=request.user).distinct().order_by('-criado_em')[:5]
+    ultimos_registros = RegistroAluno.objects.filter(alunos__turma__coordenadores=request.user).distinct().order_by('-criado_em')[:5]
 
     # Chart Data: Total de presenças e faltas geral
-    registros = RegistroChamada.objects.filter(chamada__turma__coordenador=request.user)
+    registros = RegistroChamada.objects.filter(chamada__turma__coordenadores=request.user)
     presencas = registros.filter(status='P').count()
     faltas = registros.filter(status='F').count()
     
@@ -247,7 +247,20 @@ def chamada_realizar(request):
                 if status == 'F':
                     faltas_count += 1
                     
-        # Aqui poderíamos implementar a lógica de verificar 3 faltas consecutivas e gerar aviso.
+        # Lógica de verificar 3 faltas consecutivas e gerar aviso para todos os coordenadores.
+        for aluno in alunos:
+            status = request.POST.get(f'aluno_{aluno.id}')
+            if status == 'F':
+                # Verifica as últimas 3 chamadas (incluindo a atual)
+                ultimas = RegistroChamada.objects.filter(aluno=aluno).order_by('-chamada__data')[:3]
+                if ultimas.count() == 3 and all(r.status == 'F' for r in ultimas):
+                    # Se não houver já um registro recente sobre faltas hoje, criar:
+                    if not RegistroAluno.objects.filter(alunos=aluno, data=chamada_info['data'], descricao__icontains='3 faltas consecutivas').exists():
+                        registro_aviso = RegistroAluno.objects.create(
+                            descricao=f"SISTEMA: O aluno(a) {aluno.nome} atingiu 3 faltas consecutivas.",
+                            criado_por=request.user
+                        )
+                        registro_aviso.alunos.add(aluno)
         
         messages.success(request, f"Chamada salva com sucesso! {faltas_count} faltas registradas.")
         del request.session['chamada_data']

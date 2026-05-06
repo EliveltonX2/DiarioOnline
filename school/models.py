@@ -3,7 +3,7 @@ from django.conf import settings
 
 class Turma(models.Model):
     nome = models.CharField(max_length=100)
-    coordenador = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='turmas')
+    coordenadores = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='turmas')
     criado_em = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

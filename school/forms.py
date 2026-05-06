@@ -10,10 +10,10 @@ class TurmaForm(forms.ModelForm):
 
     class Meta:
         model = Turma
-        fields = ['nome', 'coordenador']
+        fields = ['nome', 'coordenadores']
         widgets = {
             'nome': forms.TextInput(attrs={'class': 'form-control'}),
-            'coordenador': forms.Select(attrs={'class': 'form-select'}),
+            'coordenadores': forms.SelectMultiple(attrs={'class': 'form-select'}),
         }
 
 class AlunoForm(forms.ModelForm):
