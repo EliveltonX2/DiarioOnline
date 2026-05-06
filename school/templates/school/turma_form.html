@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ action }} Turma - DiOn{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="text-primary font-weight-bold m-0"><i class="fa-solid fa-users-gear me-2"></i>{{ action }} Turma</h3>
+            <a href="{% url 'turma_list' %}" class="btn btn-outline-secondary btn-sm rounded-pill"><i class="fa-solid fa-arrow-left me-1"></i> Voltar</a>
+        </div>
+
+        <div class="card card-custom p-4">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label for="{{ form.nome.id_for_label }}" class="form-label font-weight-bold">Nome da Turma</label>
+                    {{ form.nome }}
+                    {% if form.nome.errors %}
+                        <div class="text-danger small mt-1">{{ form.nome.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.coordenador.id_for_label }}" class="form-label font-weight-bold">Coordenador Responsável</label>
+                    {{ form.coordenador }}
+                    {% if form.coordenador.errors %}
+                        <div class="text-danger small mt-1">{{ form.coordenador.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <hr class="my-4">
+                
+                <h5 class="text-info font-weight-bold mb-3"><i class="fa-solid fa-file-csv me-2"></i>Importar Alunos (Opcional)</h5>
+                <div class="mb-3">
+                    <label for="{{ form.csv_file.id_for_label }}" class="form-label text-muted">{{ form.csv_file.help_text }}</label>
+                    <input type="file" name="{{ form.csv_file.name }}" class="form-control" id="{{ form.csv_file.id_for_label }}" accept=".csv">
+                    <div class="mt-2">
+                        <a href="{% static 'exemplo_alunos.csv' %}" download class="text-decoration-none small text-primary">
+                            <i class="fa-solid fa-download me-1"></i> Baixar arquivo CSV de exemplo
+                        </a>
+                    </div>
+                    {% if form.csv_file.errors %}
+                        <div class="text-danger small mt-1">{{ form.csv_file.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="d-grid mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg action-button"><i class="fa-solid fa-save me-2"></i>Salvar Turma</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,44 @@
+# Ambientes Virtuais
+venv/
+env/
+.venv/
+
+# Variáveis de Ambiente
+.env
+.env.*
+
+# Python
+*.pyc
+*~
+__pycache__/
+*.pyo
+*.pyd
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Banco de Dados Local
+db.sqlite3
+db.sqlite3-journal
+
+# Arquivos Estáticos e Mídia do Django
+staticfiles/
+media/
+assets/
+
+# Logs
+*.log
+logs/
+
+# IDEs e Editores
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Cache e Arquivos Temporários
+.pytest_cache/
+.coverage
+htmlcov/

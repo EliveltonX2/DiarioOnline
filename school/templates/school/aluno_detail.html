@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalhes do Aluno - DiOn{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="text-primary font-weight-bold m-0"><i class="fa-solid fa-user-graduate me-2"></i>{{ aluno.nome }}</h2>
+        <p class="text-muted m-0">Cod SGDE: {{ aluno.cod_sgde }}</p>
+    </div>
+    <div>
+        <a href="{% url 'aluno_edit' aluno.pk %}" class="btn btn-outline-primary btn-sm rounded-pill me-2"><i class="fa-solid fa-pen"></i> Editar</a>
+        <a href="{% url 'aluno_list' %}" class="btn btn-outline-secondary btn-sm rounded-pill"><i class="fa-solid fa-arrow-left"></i> Voltar</a>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Info Card -->
+    <div class="col-md-6">
+        <div class="card card-custom h-100">
+            <div class="card-header bg-transparent border-0 pt-4 pb-0">
+                <h5 class="text-dark font-weight-bold"><i class="fa-solid fa-circle-info me-2 text-info"></i>Informações Pessoais</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span class="text-muted">Turma</span>
+                        <span class="font-weight-bold">
+                            {% if aluno.turma %}
+                                <a href="{% url 'turma_detail' aluno.turma.pk %}" class="text-decoration-none">{{ aluno.turma.nome }}</a>
+                            {% else %}
+                                Sem turma
+                            {% endif %}
+                        </span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span class="text-muted">Situação</span>
+                        <span>
+                            {% if aluno.situacao == 'em_curso' %}
+                                <span class="badge bg-success rounded-pill">Em Curso</span>
+                            {% elif aluno.situacao == 'transferido' %}
+                                <span class="badge bg-warning text-dark rounded-pill">Transferido</span>
+                            {% else %}
+                                <span class="badge bg-secondary rounded-pill">{{ aluno.get_situacao_display }}</span>
+                            {% endif %}
+                        </span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span class="text-muted">Data de Nascimento</span>
+                        <span class="font-weight-bold">{{ aluno.data_nascimento|date:"d/m/Y"|default:"Não informada" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span class="text-muted">Gênero</span>
+                        <span class="font-weight-bold">{{ aluno.get_genero_display }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span class="text-muted">Contato Responsável</span>
+                        <span class="font-weight-bold">{{ aluno.telefone_responsavel|default:"Não informado" }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Chart Card -->
+    <div class="col-md-6">
+        <div class="card card-custom h-100">
+            <div class="card-header bg-transparent border-0 pt-4 pb-0">
+                <h5 class="text-success font-weight-bold"><i class="fa-solid fa-chart-pie me-2"></i>Frequência Individual</h5>
+            </div>
+            <div class="card-body d-flex align-items-center justify-content-center">
+                <canvas id="alunoChart" style="max-height: 220px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Registros do Aluno -->
+<div class="card card-custom">
+    <div class="card-header bg-warning text-dark pt-3 pb-2 border-0" style="border-radius: 15px 15px 0 0;">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="m-0"><i class="fa-solid fa-file-lines me-2"></i>Histórico de Registros ({{ registros.count }})</h5>
+            <a href="{% url 'registro_aluno_create' %}?aluno={{ aluno.pk }}" class="btn btn-light btn-sm rounded-pill text-warning"><i class="fa-solid fa-plus"></i> Novo Registro</a>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="list-group list-group-flush">
+            {% for registro in registros %}
+                <div class="list-group-item p-4">
+                    <div class="d-flex w-100 justify-content-between mb-2">
+                        <h6 class="mb-1 font-weight-bold text-dark">Data: {{ registro.data|date:"d/m/Y" }}</h6>
+                        <small class="text-muted">Registrado por: {{ registro.criado_por.username|default:"Sistema" }}</small>
+                    </div>
+                    <p class="mb-1">{{ registro.descricao|linebreaksbr }}</p>
+                    <small class="text-muted">
+                        Outros envolvidos: 
+                        {% for a in registro.alunos.all %}
+                            {% if a != aluno %}
+                                <a href="{% url 'aluno_detail' a.pk %}" class="text-decoration-none">{{ a.nome }}</a>{% if not forloop.last %}, {% endif %}
+                            {% endif %}
+                        {% empty %}
+                            Nenhum
+                        {% endfor %}
+                    </small>
+                </div>
+            {% empty %}
+                <div class="text-center p-5 text-muted">
+                    <i class="fa-regular fa-face-smile fa-3x mb-3 text-success"></i>
+                    <h5>Nenhum registro encontrado.</h5>
+                    <p>Este aluno não possui ocorrências registradas.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var chartData = {{ chart_data_json|safe }};
+        
+        var ctx = document.getElementById('alunoChart').getContext('2d');
+        var alunoChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: chartData.labels,
+                datasets: [{
+                    data: chartData.data,
+                    backgroundColor: ['#198754', '#dc3545'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

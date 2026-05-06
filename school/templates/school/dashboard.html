@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - DiOn{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="font-weight-bold text-primary mb-0">Olá, {{ user.username }}!</h2>
+        <p class="text-muted">Bem-vindo ao seu painel de controle.</p>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Quick Stats -->
+    <div class="col-6 col-md-3">
+        <div class="card card-custom bg-primary text-white h-100 text-center p-3 position-relative">
+            <i class="fa-solid fa-users fa-2x mb-2"></i>
+            <h3 class="mb-0">{{ turmas_count }}</h3>
+            <small>Minhas Turmas</small>
+            <a href="{% url 'turma_list' %}" class="stretched-link"></a>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card card-custom bg-success text-white h-100 text-center p-3 position-relative">
+            <i class="fa-solid fa-user-graduate fa-2x mb-2"></i>
+            <h3 class="mb-0">{{ alunos_count }}</h3>
+            <small>Total de Alunos</small>
+            <a href="{% url 'aluno_list' %}" class="stretched-link"></a>
+        </div>
+    </div>
+    <!-- Quick Actions -->
+    <div class="col-12 col-md-6">
+        <div class="card card-custom h-100 p-3">
+            <h5 class="card-title text-muted mb-3"><i class="fa-solid fa-bolt text-warning me-2"></i>Ações Rápidas</h5>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{% url 'turma_create' %}" class="btn btn-outline-primary btn-sm rounded-pill"><i class="fa-solid fa-plus me-1"></i> Nova Turma</a>
+                <a href="{% url 'aluno_create' %}" class="btn btn-outline-success btn-sm rounded-pill"><i class="fa-solid fa-user-plus me-1"></i> Novo Aluno</a>
+                <a href="{% url 'chamada_start' %}" class="btn btn-outline-warning btn-sm rounded-pill text-dark"><i class="fa-solid fa-clipboard-check me-1"></i> Fazer Chamada</a>
+                <a href="{% url 'registro_aluno_create' %}" class="btn btn-outline-info btn-sm rounded-pill"><i class="fa-solid fa-file-circle-plus me-1"></i> Reg. Aluno</a>
+                <a href="{% url 'registro_turma_create' %}" class="btn btn-outline-info btn-sm rounded-pill"><i class="fa-solid fa-file-circle-plus me-1"></i> Reg. Turma</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Lembretes e Avisos -->
+    <div class="col-md-6 mb-4">
+        <div class="card card-custom h-100">
+            <div class="card-header bg-transparent border-0 pt-4 pb-0">
+                <h5 class="text-danger font-weight-bold"><i class="fa-solid fa-bell me-2"></i>Avisos e Lembretes</h5>
+            </div>
+            <div class="card-body">
+                {% if ultimos_registros %}
+                    <div class="list-group list-group-flush">
+                    {% for registro in ultimos_registros %}
+                        <div class="list-group-item px-0 border-bottom">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1 text-dark">{{ registro.descricao|truncatechars:50 }}</h6>
+                                <small class="text-muted">{{ registro.data|date:"d/m/Y" }}</small>
+                            </div>
+                            <small class="text-muted">
+                                Alunos envolvidos: 
+                                {% for aluno in registro.alunos.all|slice:":3" %}
+                                    {{ aluno.nome }}{% if not forloop.last %}, {% endif %}
+                                {% endfor %}
+                                {% if registro.alunos.count > 3 %}...{% endif %}
+                            </small>
+                        </div>
+                    {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted p-4">
+                        <i class="fa-regular fa-face-smile fa-2x mb-2 text-success"></i>
+                        <p class="mb-0">Tudo tranquilo! Nenhum aviso recente.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Gráfico Resumo -->
+    <div class="col-md-6 mb-4">
+        <div class="card card-custom h-100">
+            <div class="card-header bg-transparent border-0 pt-4 pb-0">
+                <h5 class="text-primary font-weight-bold"><i class="fa-solid fa-chart-pie me-2"></i>Visão Geral</h5>
+            </div>
+            <div class="card-body d-flex align-items-center justify-content-center">
+                <canvas id="dashboardChart" style="max-height: 250px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var chartData = {{ chart_data_json|safe }};
+        
+        var ctx = document.getElementById('dashboardChart').getContext('2d');
+        var dashboardChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: chartData.labels,
+                datasets: [{
+                    data: chartData.data,
+                    backgroundColor: ['#198754', '#dc3545'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

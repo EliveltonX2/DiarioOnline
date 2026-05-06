@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Turmas - DiOn{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="text-primary font-weight-bold m-0"><i class="fa-solid fa-users me-2"></i>Turmas</h2>
+    <a href="{% url 'turma_create' %}" class="btn btn-primary action-button">
+        <i class="fa-solid fa-plus me-1"></i> Nova Turma
+    </a>
+</div>
+
+<div class="row g-4">
+    {% for turma in turmas %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card card-custom h-100">
+            <div class="card-body">
+                <h4 class="card-title text-dark font-weight-bold">{{ turma.nome }}</h4>
+                <p class="card-text text-muted mb-2">
+                    <i class="fa-solid fa-user-tie me-2"></i>{{ turma.coordenador.username|default:"Sem coordenador" }}
+                </p>
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <span class="badge bg-info rounded-pill px-3 py-2">
+                        <i class="fa-solid fa-user-graduate me-1"></i> {{ turma.alunos.count }} alunos
+                    </span>
+                    <a href="{% url 'turma_detail' turma.pk %}" class="btn btn-outline-primary btn-sm rounded-pill">Ver Detalhes</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center text-muted p-5">
+        <i class="fa-solid fa-folder-open fa-3x mb-3 text-secondary"></i>
+        <h5>Nenhuma turma cadastrada.</h5>
+        <p>Comece adicionando uma nova turma ao sistema.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

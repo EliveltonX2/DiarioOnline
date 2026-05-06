@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalhes da Turma - DiOn{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="text-primary font-weight-bold m-0"><i class="fa-solid fa-users me-2"></i>{{ turma.nome }}</h2>
+        <p class="text-muted m-0">Coordenador: {{ turma.coordenador.username|default:"Nenhum" }}</p>
+    </div>
+    <div>
+        <a href="{% url 'turma_edit' turma.pk %}" class="btn btn-outline-primary btn-sm rounded-pill me-2"><i class="fa-solid fa-pen"></i> Editar</a>
+        <a href="{% url 'turma_list' %}" class="btn btn-outline-secondary btn-sm rounded-pill"><i class="fa-solid fa-arrow-left"></i> Voltar</a>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Chart Card -->
+    <div class="col-md-5">
+        <div class="card card-custom h-100">
+            <div class="card-header bg-transparent border-0 pt-4 pb-0">
+                <h5 class="text-success font-weight-bold"><i class="fa-solid fa-chart-line me-2"></i>Assiduidade Geral</h5>
+            </div>
+            <div class="card-body d-flex align-items-center justify-content-center">
+                <!-- Placeholder for Chart -->
+                <canvas id="turmaChart" style="max-height: 200px;"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Actions Card -->
+    <div class="col-md-7">
+        <div class="card card-custom h-100 bg-light">
+            <div class="card-body d-flex flex-column justify-content-center">
+                <h5 class="text-dark font-weight-bold mb-3">Ações da Turma</h5>
+                <div class="d-grid gap-2 d-md-flex">
+                    <a href="{% url 'chamada_start' %}?turma={{ turma.pk }}" class="btn btn-warning rounded-pill action-button flex-grow-1"><i class="fa-solid fa-clipboard-user me-2"></i> Fazer Chamada</a>
+                    <a href="{% url 'registro_turma_create' %}?turma={{ turma.pk }}" class="btn btn-info text-white rounded-pill action-button flex-grow-1"><i class="fa-solid fa-file-circle-plus me-2"></i> Novo Registro</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de Alunos -->
+<div class="card card-custom">
+    <div class="card-header bg-primary text-white pt-3 pb-2 border-0" style="border-radius: 15px 15px 0 0;">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="m-0"><i class="fa-solid fa-user-graduate me-2"></i>Lista de Alunos ({{ alunos.count }})</h5>
+            <a href="{% url 'aluno_create' %}" class="btn btn-light btn-sm rounded-pill text-primary"><i class="fa-solid fa-plus"></i> Novo Aluno</a>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped m-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Nome</th>
+                        <th>Cód SGDE</th>
+                        <th>Situação</th>
+                        <th class="text-end pe-4">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for aluno in alunos %}
+                    <tr>
+                        <td class="ps-4 align-middle font-weight-bold">{{ aluno.nome }}</td>
+                        <td class="align-middle text-muted">{{ aluno.cod_sgde }}</td>
+                        <td class="align-middle">
+                            {% if aluno.situacao == 'em_curso' %}
+                                <span class="badge bg-success rounded-pill">Em Curso</span>
+                            {% elif aluno.situacao == 'transferido' %}
+                                <span class="badge bg-warning text-dark rounded-pill">Transferido</span>
+                            {% else %}
+                                <span class="badge bg-secondary rounded-pill">{{ aluno.get_situacao_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-4 align-middle">
+                            <a href="{% url 'aluno_detail' aluno.pk %}" class="btn btn-sm btn-outline-primary rounded-circle" title="Ver Aluno"><i class="fa-solid fa-eye"></i></a>
+                            <a href="{% url 'registro_aluno_create' %}?aluno={{ aluno.pk }}" class="btn btn-sm btn-outline-info rounded-circle" title="Registros"><i class="fa-solid fa-file-lines"></i></a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center p-4 text-muted">
+                            Nenhum aluno cadastrado nesta turma. <br>
+                            <a href="{% url 'turma_edit' turma.pk %}" class="btn btn-sm btn-outline-primary mt-2">Importar CSV</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Registros da Turma -->
+<div class="card card-custom mt-4">
+    <div class="card-header bg-info text-white pt-3 pb-2 border-0" style="border-radius: 15px 15px 0 0;">
+        <h5 class="m-0"><i class="fa-solid fa-file-lines me-2"></i>Registros da Turma ({{ registros.count }})</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="list-group list-group-flush">
+            {% for registro in registros %}
+                <div class="list-group-item p-4">
+                    <div class="d-flex w-100 justify-content-between mb-2">
+                        <h6 class="mb-1 font-weight-bold text-dark">Data: {{ registro.data|date:"d/m/Y" }}</h6>
+                        <small class="text-muted">Registrado por: {{ registro.criado_por.username|default:"Sistema" }}</small>
+                    </div>
+                    <p class="mb-1">{{ registro.descricao|linebreaksbr }}</p>
+                </div>
+            {% empty %}
+                <div class="text-center p-5 text-muted">
+                    <i class="fa-regular fa-face-smile fa-3x mb-3 text-info"></i>
+                    <h5>Nenhum registro de turma.</h5>
+                    <p>Esta turma não possui ocorrências coletivas.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var chartData = {{ chart_data_json|safe }};
+        
+        var ctx = document.getElementById('turmaChart').getContext('2d');
+        var turmaChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: chartData.labels,
+                datasets: [{
+                    label: 'Presenças',
+                    data: chartData.presencas,
+                    backgroundColor: '#198754'
+                }, {
+                    label: 'Faltas',
+                    data: chartData.faltas,
+                    backgroundColor: '#dc3545'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { stacked: true },
+                    y: { stacked: true, beginAtZero: true }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

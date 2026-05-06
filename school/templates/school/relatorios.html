@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+
+{% block title %}Relatórios - DiOn{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="text-primary font-weight-bold m-0"><i class="fa-solid fa-file-pdf me-2"></i>Relatórios</h2>
+</div>
+
+<div class="card card-custom mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label font-weight-bold">Tipo de Relatório</label>
+                <select name="tipo" class="form-select" required>
+                    <option value="">Selecione...</option>
+                    <option value="faltas" {% if tipo == 'faltas' %}selected{% endif %}>Relatório de Faltas</option>
+                    <option value="registros" {% if tipo == 'registros' %}selected{% endif %}>Ocorrências / Registros</option>
+                </select>
+            </div>
+            
+            <div class="col-md-4">
+                <label class="form-label font-weight-bold">Turma (Opcional)</label>
+                <select name="turma" class="form-select">
+                    <option value="">Todas as Turmas</option>
+                    {% for t in turmas %}
+                        <option value="{{ t.id }}" {% if request.GET.turma == t.id|stringformat:"s" %}selected{% endif %}>{{ t.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-4">
+                <label class="form-label font-weight-bold">Aluno (Opcional)</label>
+                <select name="aluno" class="form-select">
+                    <option value="">Todos os Alunos</option>
+                    {% for a in alunos %}
+                        <option value="{{ a.id }}" {% if request.GET.aluno == a.id|stringformat:"s" %}selected{% endif %}>{{ a.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-4">
+                <label class="form-label font-weight-bold">Data Início (Opcional)</label>
+                <input type="date" name="data_inicio" class="form-control" value="{{ request.GET.data_inicio }}">
+            </div>
+            
+            <div class="col-md-4">
+                <label class="form-label font-weight-bold">Data Fim (Opcional)</label>
+                <input type="date" name="data_fim" class="form-control" value="{{ request.GET.data_fim }}">
+            </div>
+            
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100 action-button"><i class="fa-solid fa-filter me-2"></i>Filtrar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if resultados is not None %}
+    <div class="d-flex justify-content-end mb-3">
+        <button id="btnGenerateExcel" class="btn btn-success rounded-pill shadow-sm"><i class="fa-solid fa-file-excel me-2"></i>Baixar Planilha (Excel)</button>
+    </div>
+
+    <div class="card card-custom" id="reportContent">
+        <div class="card-header bg-white border-0 pt-4 pb-2 text-center">
+            <h3 class="font-weight-bold text-dark">{{ titulo_relatorio }}</h3>
+            <p class="text-muted mb-0">Gerado em {% now "d/m/Y H:i" %}</p>
+        </div>
+        <div class="card-body">
+            {% if tipo == 'faltas' %}
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm text-center align-middle" style="font-size: 0.9rem;">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="text-start" data-fill-color="e9ecef" data-f-bold="true">Cód SGDE</th>
+                                <th class="text-start" data-fill-color="e9ecef" data-f-bold="true">Aluno</th>
+                                <th class="text-start" data-fill-color="e9ecef" data-f-bold="true">Situação</th>
+                                {% for chamada in resultados.chamadas %}
+                                    <th title="{{ chamada.observacao }}" data-fill-color="e9ecef" data-f-bold="true" data-t="s">{{ chamada.data|date:"d/m" }}</th>
+                                {% endfor %}
+                                <th class="bg-success text-white" data-fill-color="198754" data-f-color="ffffff" data-f-bold="true">P</th>
+                                <th class="bg-danger text-white" data-fill-color="dc3545" data-f-color="ffffff" data-f-bold="true">F</th>
+                                <th class="bg-primary text-white" data-fill-color="0d6efd" data-f-color="ffffff" data-f-bold="true">%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for linha in resultados.matriz %}
+                            <tr>
+                                <td class="text-start text-muted">{{ linha.aluno.cod_sgde }}</td>
+                                <td class="text-start font-weight-bold text-nowrap" data-f-bold="true">{{ linha.aluno.nome }}</td>
+                                <td class="text-start text-muted">{{ linha.aluno.get_situacao_display }}</td>
+                                {% for status in linha.frequencias %}
+                                    {% if status == 'P' %}
+                                        <td class="text-success font-weight-bold" data-f-bold="true" data-f-color="198754">P</td>
+                                    {% elif status == 'F' %}
+                                        <td class="text-danger font-weight-bold" data-f-bold="true" data-f-color="dc3545">F</td>
+                                    {% else %}
+                                        <td class="text-muted" data-f-color="6c757d">-</td>
+                                    {% endif %}
+                                {% endfor %}
+                                <td class="bg-light" data-fill-color="f8f9fa" data-t="n">{{ linha.total_p }}</td>
+                                <td class="bg-light" data-fill-color="f8f9fa" data-t="n">{{ linha.total_f }}</td>
+                                <td class="bg-light font-weight-bold" data-fill-color="f8f9fa" data-f-bold="true">{{ linha.porcentagem }}%</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="100" class="text-center p-4">Nenhum dado encontrado para os filtros selecionados.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% elif tipo == 'registros' %}
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped align-middle" data-cols-width="15,20,40,25">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="text-center" data-fill-color="e9ecef" data-f-bold="true">Data</th>
+                                <th data-fill-color="e9ecef" data-f-bold="true">Registrado por</th>
+                                <th data-fill-color="e9ecef" data-f-bold="true">Descrição da Ocorrência</th>
+                                <th data-fill-color="e9ecef" data-f-bold="true">Alunos Envolvidos</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for reg in resultados %}
+                            <tr>
+                                <td class="text-center">{{ reg.data|date:"d/m/Y" }}</td>
+                                <td>{{ reg.criado_por.username|default:"Sistema" }}</td>
+                                <td>{{ reg.descricao }}</td>
+                                <td>
+                                    {% for a in reg.alunos.all %}{{ a.nome }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4" class="text-center p-4 text-muted">Nenhum registro encontrado para os filtros selecionados.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<!-- TableToExcel library via CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@linways/table-to-excel@1.0.4/dist/tableToExcel.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const btn = document.getElementById('btnGenerateExcel');
+        if(btn) {
+            btn.addEventListener('click', function() {
+                const table = document.querySelector('.table');
+                if(!table) {
+                    alert('Nenhuma tabela encontrada para exportar.');
+                    return;
+                }
+                
+                // Converte a tabela HTML mantendo a formatação e as cores (bg-success, bg-danger, etc)
+                TableToExcel.convert(table, {
+                    name: "relatorio_dion.xlsx",
+                    sheet: {
+                        name: "Relatório"
+                    }
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

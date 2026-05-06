@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}Alunos - DiOn{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="text-primary font-weight-bold m-0"><i class="fa-solid fa-user-graduate me-2"></i>Alunos</h2>
+    <a href="{% url 'aluno_create' %}" class="btn btn-primary action-button">
+        <i class="fa-solid fa-plus me-1"></i> Novo Aluno
+    </a>
+</div>
+
+<div class="card card-custom">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped m-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Nome</th>
+                        <th>Cód SGDE</th>
+                        <th>Turma</th>
+                        <th>Situação</th>
+                        <th class="text-end pe-4">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for aluno in alunos %}
+                    <tr>
+                        <td class="ps-4 align-middle font-weight-bold">{{ aluno.nome }}</td>
+                        <td class="align-middle text-muted">{{ aluno.cod_sgde }}</td>
+                        <td class="align-middle">
+                            {% if aluno.turma %}
+                                <a href="{% url 'turma_detail' aluno.turma.pk %}" class="text-decoration-none">{{ aluno.turma.nome }}</a>
+                            {% else %}
+                                <span class="text-muted fst-italic">Sem turma</span>
+                            {% endif %}
+                        </td>
+                        <td class="align-middle">
+                            {% if aluno.situacao == 'em_curso' %}
+                                <span class="badge bg-success rounded-pill">Em Curso</span>
+                            {% elif aluno.situacao == 'transferido' %}
+                                <span class="badge bg-warning text-dark rounded-pill">Transferido</span>
+                            {% else %}
+                                <span class="badge bg-secondary rounded-pill">{{ aluno.get_situacao_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-4 align-middle">
+                            <a href="{% url 'aluno_detail' aluno.pk %}" class="btn btn-sm btn-outline-primary rounded-circle" title="Ver Aluno"><i class="fa-solid fa-eye"></i></a>
+                            <a href="{% url 'aluno_edit' aluno.pk %}" class="btn btn-sm btn-outline-secondary rounded-circle" title="Editar"><i class="fa-solid fa-pen"></i></a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center p-5 text-muted">
+                            <i class="fa-solid fa-users-slash fa-3x mb-3 text-secondary"></i>
+                            <h5>Nenhum aluno cadastrado.</h5>
+                            <p>Comece adicionando um novo aluno ou importando via CSV na tela de Turmas.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

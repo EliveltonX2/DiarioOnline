@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+
+{% block title %}Realizando Chamada - DiOn{% endblock %}
+
+{% block extra_css %}
+<style>
+    .student-card {
+        display: none;
+        animation: fadeIn 0.3s ease;
+    }
+    .student-card.active {
+        display: block;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .summary-card {
+        display: none;
+    }
+    .btn-huge {
+        padding: 20px;
+        font-size: 1.5rem;
+        border-radius: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h4 class="text-primary font-weight-bold m-0">{{ turma.nome }}</h4>
+                <p class="text-muted m-0 small"><i class="fa-regular fa-calendar me-1"></i> {{ chamada_info.data }}</p>
+            </div>
+            <div class="text-end">
+                <span class="badge bg-secondary rounded-pill" id="progressBadge">0 / {{ alunos.count }}</span>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress mb-4" style="height: 10px; border-radius: 10px;">
+            <div id="progressBar" class="progress-bar bg-success" role="progressbar" style="width: 0%;"></div>
+        </div>
+
+        <form id="chamadaForm" method="post" action="{% url 'chamada_realizar' %}">
+            {% csrf_token %}
+            
+            <div id="studentContainer">
+                {% for aluno in alunos %}
+                <div class="card card-custom p-4 text-center student-card" id="card_{{ forloop.counter0 }}" data-aluno-id="{{ aluno.id }}">
+                    <div class="mb-4">
+                        <i class="fa-solid fa-user-circle fa-5x text-secondary mb-3"></i>
+                        <h2 class="font-weight-bold">{{ aluno.nome }}</h2>
+                        <p class="text-muted">Cód SGDE: {{ aluno.cod_sgde }}</p>
+                    </div>
+                    
+                    <div class="d-flex justify-content-center gap-3 mt-4">
+                        <button type="button" class="btn btn-outline-danger btn-huge flex-fill action-btn" data-status="F">
+                            <i class="fa-solid fa-xmark d-block mb-1"></i> Falta
+                        </button>
+                        <button type="button" class="btn btn-outline-success btn-huge flex-fill action-btn" data-status="P">
+                            <i class="fa-solid fa-check d-block mb-1"></i> Presença
+                        </button>
+                    </div>
+                    
+                    <!-- Hidden input to store status -->
+                    <input type="hidden" name="aluno_{{ aluno.id }}" id="input_{{ aluno.id }}" value="">
+                </div>
+                {% empty %}
+                <div class="alert alert-warning">
+                    Nenhum aluno "Em Curso" encontrado nesta turma.
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Summary Screen -->
+            <div class="card card-custom p-4 text-center summary-card" id="summaryCard">
+                <i class="fa-solid fa-clipboard-check fa-5x text-success mb-3"></i>
+                <h3 class="font-weight-bold">Chamada Concluída!</h3>
+                <p class="text-muted">Todos os alunos foram registrados.</p>
+                
+                <div class="row mt-4 mb-4">
+                    <div class="col-6">
+                        <h4 class="text-success" id="countP">0</h4>
+                        <small>Presenças</small>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-danger" id="countF">0</h4>
+                        <small>Faltas</small>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg w-100 action-button">
+                    <i class="fa-solid fa-save me-2"></i>Salvar Chamada
+                </button>
+                <button type="button" class="btn btn-link text-muted mt-2" onclick="location.reload();">Recomeçar</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const totalStudents = {{ alunos.count }};
+        if (totalStudents === 0) return;
+
+        let currentIndex = 0;
+        let presencas = 0;
+        let faltas = 0;
+
+        const cards = document.querySelectorAll('.student-card');
+        const progressBar = document.getElementById('progressBar');
+        const progressBadge = document.getElementById('progressBadge');
+        const summaryCard = document.getElementById('summaryCard');
+
+        // Show first student
+        cards[0].classList.add('active');
+
+        // Add event listeners to buttons
+        document.querySelectorAll('.action-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const status = this.getAttribute('data-status');
+                const card = this.closest('.student-card');
+                const alunoId = card.getAttribute('data-aluno-id');
+                
+                // Set hidden input value
+                document.getElementById('input_' + alunoId).value = status;
+                
+                // Update counters
+                if (status === 'P') presencas++;
+                if (status === 'F') faltas++;
+
+                // Hide current, show next
+                card.classList.remove('active');
+                currentIndex++;
+                
+                updateProgress();
+
+                if (currentIndex < totalStudents) {
+                    cards[currentIndex].classList.add('active');
+                } else {
+                    showSummary();
+                }
+            });
+        });
+
+        function updateProgress() {
+            const percent = (currentIndex / totalStudents) * 100;
+            progressBar.style.width = percent + '%';
+            progressBadge.innerText = currentIndex + ' / ' + totalStudents;
+        }
+
+        function showSummary() {
+            document.getElementById('countP').innerText = presencas;
+            document.getElementById('countF').innerText = faltas;
+            summaryCard.style.display = 'block';
+        }
+    });
+</script>
+{% endblock %}
