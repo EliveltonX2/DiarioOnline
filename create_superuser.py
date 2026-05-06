@@ -5,7 +5,9 @@ import django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'dion_project.settings')
 django.setup()
 
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 username = os.environ.get('ADMIN_USERNAME', 'admin')
 password = os.environ.get('ADMIN_PASSWORD', 'admin')
