@@ -24,6 +24,17 @@
                         Sem coordenador
                     {% endfor %}
                 </p>
+                <p class="card-text text-muted mb-2">
+                    <i class="fa-solid fa-calendar-check me-2"></i> Última Chamada: 
+                    {% if turma.ultima_chamada %}
+                        {{ turma.ultima_chamada|date:"d/m/Y" }}
+                        {% if turma.ultima_chamada|date:"Y-m-d" == hoje|date:"Y-m-d" %}
+                            <i class="fa-solid fa-check-circle text-success ms-1" title="Chamada realizada hoje"></i>
+                        {% endif %}
+                    {% else %}
+                        Nenhuma
+                    {% endif %}
+                </p>
                 <div class="d-flex justify-content-between align-items-center mt-3">
                     <span class="badge bg-info rounded-pill px-3 py-2">
                         <i class="fa-solid fa-user-graduate me-1"></i> {{ turma.alunos.count }} alunos

@@ -19,6 +19,7 @@ urlpatterns = [
     
     path('registros/aluno/novo/', views.registro_aluno_create, name='registro_aluno_create'),
     path('registros/turma/novo/', views.registro_turma_create, name='registro_turma_create'),
+    path('registros/marcar-lido/<int:pk>/', views.marcar_lido, name='marcar_lido'),
     
     path('relatorios/', views.relatorios, name='relatorios'),
 ]

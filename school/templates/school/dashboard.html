@@ -54,10 +54,15 @@
                 {% if ultimos_registros %}
                     <div class="list-group list-group-flush">
                     {% for registro in ultimos_registros %}
-                        <div class="list-group-item px-0 border-bottom">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h6 class="mb-1 text-dark">{{ registro.descricao|truncatechars:50 }}</h6>
-                                <small class="text-muted">{{ registro.data|date:"d/m/Y" }}</small>
+                        <div class="list-group-item px-0 border-bottom" id="registro-{{ registro.pk }}">
+                            <div class="d-flex w-100 justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1 text-dark">{{ registro.descricao|truncatechars:50 }}</h6>
+                                    <small class="text-muted">{{ registro.data|date:"d/m/Y" }}</small>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-success border-0 rounded-circle btn-lido" data-id="{{ registro.pk }}" title="Marcar como lido">
+                                    <i class="fa-solid fa-check"></i>
+                                </button>
                             </div>
                             <small class="text-muted">
                                 Alunos envolvidos: 
@@ -97,6 +102,56 @@
 {% block extra_js %}
 <script>
     document.addEventListener("DOMContentLoaded", function() {
+        // Setup AJAX CSRF
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        const csrftoken = getCookie('csrftoken');
+
+        // Marcar como lido
+        document.querySelectorAll('.btn-lido').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                const item = document.getElementById('registro-' + id);
+                
+                fetch(`/registros/marcar-lido/${id}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrftoken,
+                        'Content-Type': 'application/json'
+                    }
+                }).then(response => {
+                    if (response.ok) {
+                        item.style.transition = 'opacity 0.3s ease';
+                        item.style.opacity = '0';
+                        setTimeout(() => {
+                            item.remove();
+                            const listContainer = document.querySelector('.list-group');
+                            if (listContainer && listContainer.children.length === 0) {
+                                listContainer.outerHTML = `
+                                <div class="text-center text-muted p-4">
+                                    <i class="fa-regular fa-face-smile fa-2x mb-2 text-success"></i>
+                                    <p class="mb-0">Tudo tranquilo! Nenhum aviso recente.</p>
+                                </div>`;
+                            }
+                        }, 300);
+                    }
+                });
+            });
+        });
+
+        // Chart Data
         var chartData = {{ chart_data_json|safe }};
         
         var ctx = document.getElementById('dashboardChart').getContext('2d');

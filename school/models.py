@@ -38,6 +38,7 @@ class RegistroAluno(models.Model):
     descricao = models.TextField()
     alunos = models.ManyToManyField(Aluno, related_name='registros')
     criado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    lido_por = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='registros_aluno_lidos', blank=True)
     criado_em = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

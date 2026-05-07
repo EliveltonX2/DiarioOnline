@@ -11,7 +11,10 @@
 </div>
 
 <div class="card card-custom">
-    <div class="card-body p-0">
+    <div class="card-header bg-white border-0 pt-3 pb-0">
+        <input type="text" id="searchAlunos" class="form-control rounded-pill" placeholder="Buscar aluno por nome ou código SGDE...">
+    </div>
+    <div class="card-body p-0 mt-2">
         <div class="table-responsive">
             <table class="table table-hover table-striped m-0">
                 <thead class="table-light">
@@ -63,4 +66,32 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const searchInput = document.getElementById('searchAlunos');
+        if (searchInput) {
+            searchInput.addEventListener('keyup', function() {
+                const term = this.value.toLowerCase();
+                const rows = document.querySelectorAll('tbody tr');
+                
+                rows.forEach(row => {
+                    // Check if it's the empty state row
+                    if (row.cells.length === 1) return;
+                    
+                    const nome = row.cells[0].textContent.toLowerCase();
+                    const codigo = row.cells[1].textContent.toLowerCase();
+                    
+                    if (nome.includes(term) || codigo.includes(term)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        }
+    });
+</script>
 {% endblock %}

@@ -65,6 +65,14 @@
                         </button>
                     </div>
                     
+                    {% if forloop.counter0 > 0 %}
+                    <div class="mt-4">
+                        <button type="button" class="btn btn-outline-secondary rounded-pill back-btn">
+                            <i class="fa-solid fa-arrow-left me-1"></i> Voltar ao Aluno Anterior
+                        </button>
+                    </div>
+                    {% endif %}
+                    
                     <!-- Hidden input to store status -->
                     <input type="hidden" name="aluno_{{ aluno.id }}" id="input_{{ aluno.id }}" value="">
                 </div>
@@ -145,6 +153,30 @@
                 } else {
                     showSummary();
                 }
+            });
+        });
+
+        // Add event listeners to back buttons
+        document.querySelectorAll('.back-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const card = this.closest('.student-card');
+                
+                // Hide current, show previous
+                card.classList.remove('active');
+                currentIndex--;
+                
+                // Get previous card to remove its status from counters
+                const prevCard = cards[currentIndex];
+                const prevAlunoId = prevCard.getAttribute('data-aluno-id');
+                const prevInput = document.getElementById('input_' + prevAlunoId);
+                const prevStatus = prevInput.value;
+                
+                if (prevStatus === 'P') presencas--;
+                if (prevStatus === 'F') faltas--;
+                prevInput.value = ''; // Reset the value
+                
+                updateProgress();
+                prevCard.classList.add('active');
             });
         });
 

@@ -57,8 +57,11 @@
         </div>
     </div>
     <div class="card-body p-0">
+        <div class="p-3 border-bottom bg-light">
+            <input type="text" id="searchAlunos" class="form-control rounded-pill" placeholder="Buscar aluno por nome ou código SGDE...">
+        </div>
         <div class="table-responsive">
-            <table class="table table-hover table-striped m-0">
+            <table class="table table-hover table-striped m-0" id="alunosTable">
                 <thead class="table-light">
                     <tr>
                         <th class="ps-4">Nome</th>
@@ -156,6 +159,28 @@
                 }
             }
         });
+
+        // Search functionality
+        const searchInput = document.getElementById('searchAlunos');
+        if (searchInput) {
+            searchInput.addEventListener('keyup', function() {
+                const term = this.value.toLowerCase();
+                const rows = document.querySelectorAll('#alunosTable tbody tr');
+                
+                rows.forEach(row => {
+                    if (row.cells.length === 1) return; // Empty state
+                    
+                    const nome = row.cells[0].textContent.toLowerCase();
+                    const codigo = row.cells[1].textContent.toLowerCase();
+                    
+                    if (nome.includes(term) || codigo.includes(term)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        }
     });
 </script>
 {% endblock %}

@@ -35,3 +35,70 @@
     </div>
 </div>
 {% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const selectBox = document.getElementById('id_alunos');
+        if (!selectBox) return;
+
+        // Hide original select
+        selectBox.style.display = 'none';
+
+        // Create UI container
+        const container = document.createElement('div');
+        container.className = 'row mt-2';
+        container.innerHTML = `
+            <div class="col-md-6 mb-3 mb-md-0">
+                <label class="form-label small text-muted">Disponíveis</label>
+                <input type="text" id="searchAvailable" class="form-control form-control-sm mb-2 rounded-pill" placeholder="Buscar aluno...">
+                <div class="list-group list-group-flush border rounded" style="max-height: 250px; overflow-y: auto;" id="listAvailable"></div>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label small text-muted">Selecionados (clique para remover)</label>
+                <div class="list-group list-group-flush border rounded bg-light" style="max-height: 250px; overflow-y: auto;" id="listSelected"></div>
+            </div>
+        `;
+        selectBox.parentNode.insertBefore(container, selectBox.nextSibling);
+
+        const listAvailable = document.getElementById('listAvailable');
+        const listSelected = document.getElementById('listSelected');
+        const searchAvailable = document.getElementById('searchAvailable');
+
+        function renderLists() {
+            listAvailable.innerHTML = '';
+            listSelected.innerHTML = '';
+            
+            const term = searchAvailable.value.toLowerCase();
+
+            Array.from(selectBox.options).forEach(option => {
+                const item = document.createElement('a');
+                item.href = 'javascript:void(0)';
+                item.className = 'list-group-item list-group-item-action py-2 px-3 small';
+                
+                if (option.selected) {
+                    item.classList.add('text-primary', 'font-weight-bold');
+                    item.innerHTML = `<i class="fa-solid fa-xmark text-danger me-2"></i>` + option.text;
+                    item.onclick = function() {
+                        option.selected = false;
+                        renderLists();
+                    };
+                    listSelected.appendChild(item);
+                } else {
+                    if (option.text.toLowerCase().includes(term)) {
+                        item.textContent = option.text;
+                        item.onclick = function() {
+                            option.selected = true;
+                            renderLists();
+                        };
+                        listAvailable.appendChild(item);
+                    }
+                }
+            });
+        }
+
+        searchAvailable.addEventListener('keyup', renderLists);
+        renderLists();
+    });
+</script>
+{% endblock %}

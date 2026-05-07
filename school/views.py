@@ -6,17 +6,18 @@ from .forms import TurmaForm, AlunoForm, ChamadaForm, RegistroAlunoForm, Registr
 import csv
 import io
 from django.forms.models import model_to_dict
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Max
 import json
-from datetime import datetime
+from datetime import datetime, date
+from django.http import JsonResponse
 
 @login_required
 def dashboard(request):
     turmas_count = Turma.objects.filter(coordenadores=request.user).count()
     alunos_count = Aluno.objects.filter(turma__coordenadores=request.user).count()
     
-    # Exemplo de lembretes: últimos registros
-    ultimos_registros = RegistroAluno.objects.filter(alunos__turma__coordenadores=request.user).distinct().order_by('-criado_em')[:5]
+    # Lembretes: últimos registros não lidos pelo usuário atual
+    ultimos_registros = RegistroAluno.objects.filter(alunos__turma__coordenadores=request.user).exclude(lido_por=request.user).distinct().order_by('-criado_em')[:5]
 
     # Chart Data: Total de presenças e faltas geral
     registros = RegistroChamada.objects.filter(chamada__turma__coordenadores=request.user)
@@ -38,8 +39,8 @@ def dashboard(request):
 
 @login_required
 def turma_list(request):
-    turmas = Turma.objects.all().order_by('-criado_em')
-    return render(request, 'school/turma_list.html', {'turmas': turmas})
+    turmas = Turma.objects.annotate(ultima_chamada=Max('chamadas__data')).order_by('-criado_em')
+    return render(request, 'school/turma_list.html', {'turmas': turmas, 'hoje': date.today()})
 
 @login_required
 def turma_detail(request, pk):
@@ -413,4 +414,12 @@ def registro_turma_create(request):
         form = RegistroTurmaForm(initial={'turma': initial_turma})
         
     return render(request, 'school/registro_form.html', {'form': form, 'titulo': 'Novo Registro de Turma'})
+
+@login_required
+def marcar_lido(request, pk):
+    if request.method == 'POST':
+        registro = get_object_or_404(RegistroAluno, pk=pk)
+        registro.lido_por.add(request.user)
+        return JsonResponse({'status': 'ok'})
+    return JsonResponse({'status': 'error', 'message': 'Método não permitido'}, status=405)
 
