@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalhes da Chamada - DiOn{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="text-primary font-weight-bold m-0"><i class="fa-solid fa-clipboard-check me-2"></i>Detalhes da Chamada</h2>
+        <p class="text-muted m-0">Turma: <a href="{% url 'turma_detail' chamada.turma.pk %}">{{ chamada.turma.nome }}</a> | Data: {{ chamada.data|date:"d/m/Y" }}</p>
+    </div>
+    <div>
+        <a href="{% url 'chamada_edit' chamada.pk %}" class="btn btn-warning rounded-pill action-button"><i class="fa-solid fa-pen-to-square me-1"></i> Editar Chamada</a>
+        <a href="{% url 'chamada_list' %}" class="btn btn-outline-secondary rounded-pill"><i class="fa-solid fa-arrow-left me-1"></i> Voltar</a>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card card-custom h-100">
+            <div class="card-body">
+                <h5 class="font-weight-bold mb-3">Informações Gerais</h5>
+                <p><strong>Clima/Evento:</strong> 
+                    {% if chamada.icone_clima_evento %}
+                        {{ chamada.get_icone_clima_evento_display }}
+                    {% else %}
+                        Nenhum
+                    {% endif %}
+                </p>
+                <p><strong>Registrado por:</strong> {{ chamada.criado_por.username|default:"Sistema" }}</p>
+                <p><strong>Criado em:</strong> {{ chamada.criado_em|date:"d/m/Y H:i" }}</p>
+                <hr>
+                <p><strong>Observação:</strong></p>
+                <div class="p-2 bg-light rounded" style="min-height: 100px;">
+                    {{ chamada.observacao|default:"Nenhuma observação registrada."|linebreaksbr }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card card-custom">
+            <div class="card-header bg-primary text-white border-0 pt-3 pb-2" style="border-radius: 15px 15px 0 0;">
+                <h5 class="m-0"><i class="fa-solid fa-user-graduate me-2"></i>Frequência dos Alunos</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover m-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Aluno</th>
+                                <th>Cód SGDE</th>
+                                <th class="text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for r in registros %}
+                            <tr>
+                                <td class="ps-4 align-middle font-weight-bold">{{ r.aluno.nome }}</td>
+                                <td class="align-middle text-muted">{{ r.aluno.cod_sgde }}</td>
+                                <td class="text-center align-middle">
+                                    {% if r.status == 'P' %}
+                                        <span class="badge bg-success rounded-pill px-3 py-2"><i class="fa-solid fa-check me-1"></i> Presença</span>
+                                    {% else %}
+                                        <span class="badge bg-danger rounded-pill px-3 py-2"><i class="fa-solid fa-xmark me-1"></i> Falta</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

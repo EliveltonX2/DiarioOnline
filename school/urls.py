@@ -16,9 +16,14 @@ urlpatterns = [
     path('chamadas/', views.chamada_list, name='chamada_list'),
     path('chamadas/iniciar/', views.chamada_start, name='chamada_start'),
     path('chamadas/realizar/', views.chamada_realizar, name='chamada_realizar'),
+    path('chamadas/<int:pk>/', views.chamada_detail, name='chamada_detail'),
+    path('chamadas/<int:pk>/editar/', views.chamada_edit, name='chamada_edit'),
     
+    path('registros/', views.registro_list, name='registro_list'),
     path('registros/aluno/novo/', views.registro_aluno_create, name='registro_aluno_create'),
+    path('registros/aluno/<int:pk>/editar/', views.registro_aluno_edit, name='registro_aluno_edit'),
     path('registros/turma/novo/', views.registro_turma_create, name='registro_turma_create'),
+    path('registros/turma/<int:pk>/editar/', views.registro_turma_edit, name='registro_turma_edit'),
     path('registros/marcar-lido/<int:pk>/', views.marcar_lido, name='marcar_lido'),
     
     path('relatorios/', views.relatorios, name='relatorios'),

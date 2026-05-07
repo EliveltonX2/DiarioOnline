@@ -275,8 +275,49 @@ def chamada_realizar(request):
 
 @login_required
 def chamada_list(request):
+    search_query = request.GET.get('q', '')
     chamadas = Chamada.objects.all().select_related('turma', 'criado_por').order_by('-data')
-    return render(request, 'school/chamada_list.html', {'chamadas': chamadas})
+    
+    if search_query:
+        chamadas = chamadas.filter(
+            Q(data__icontains=search_query) |
+            Q(turma__nome__icontains=search_query) |
+            Q(criado_por__username__icontains=search_query)
+        )
+        
+    return render(request, 'school/chamada_list.html', {'chamadas': chamadas, 'search_query': search_query})
+
+@login_required
+def chamada_detail(request, pk):
+    chamada = get_object_or_404(Chamada, pk=pk)
+    registros = chamada.registros.all().select_related('aluno').order_by('aluno__nome')
+    return render(request, 'school/chamada_detail.html', {'chamada': chamada, 'registros': registros})
+
+@login_required
+def chamada_edit(request, pk):
+    chamada = get_object_or_404(Chamada, pk=pk)
+    registros = chamada.registros.all().select_related('aluno').order_by('aluno__nome')
+    
+    if request.method == 'POST':
+        form = ChamadaForm(request.POST, instance=chamada)
+        if form.is_valid():
+            form.save()
+            # Atualiza os status individuais dos alunos
+            for r in registros:
+                status = request.POST.get(f'aluno_{r.aluno.id}')
+                if status in ['P', 'F']:
+                    r.status = status
+                    r.save()
+            messages.success(request, "Chamada atualizada com sucesso.")
+            return redirect('chamada_detail', pk=chamada.pk)
+    else:
+        form = ChamadaForm(instance=chamada)
+        
+    return render(request, 'school/chamada_edit.html', {
+        'form': form,
+        'chamada': chamada,
+        'registros': registros
+    })
 
 @login_required
 def relatorios(request):
@@ -414,6 +455,67 @@ def registro_turma_create(request):
         form = RegistroTurmaForm(initial={'turma': initial_turma})
         
     return render(request, 'school/registro_form.html', {'form': form, 'titulo': 'Novo Registro de Turma'})
+
+@login_required
+def registro_list(request):
+    search_query = request.GET.get('q', '')
+    
+    registros_aluno = RegistroAluno.objects.all().prefetch_related('alunos').select_related('criado_por')
+    registros_turma = RegistroTurma.objects.all().select_related('turma', 'criado_por')
+    
+    if search_query:
+        registros_aluno = registros_aluno.filter(
+            Q(descricao__icontains=search_query) |
+            Q(alunos__nome__icontains=search_query) |
+            Q(criado_por__username__icontains=search_query) |
+            Q(data__icontains=search_query)
+        ).distinct()
+        
+        registros_turma = registros_turma.filter(
+            Q(descricao__icontains=search_query) |
+            Q(turma__nome__icontains=search_query) |
+            Q(criado_por__username__icontains=search_query) |
+            Q(data__icontains=search_query)
+        ).distinct()
+    
+    # Combinar e ordenar por data
+    import itertools
+    combined = sorted(
+        itertools.chain(registros_aluno, registros_turma),
+        key=lambda x: (x.data, x.criado_em),
+        reverse=True
+    )
+    
+    return render(request, 'school/registro_list.html', {
+        'registros': combined,
+        'search_query': search_query
+    })
+
+@login_required
+def registro_aluno_edit(request, pk):
+    registro = get_object_or_404(RegistroAluno, pk=pk)
+    if request.method == 'POST':
+        form = RegistroAlunoForm(request.POST, instance=registro)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Registro de aluno atualizado com sucesso.")
+            return redirect('registro_list')
+    else:
+        form = RegistroAlunoForm(instance=registro)
+    return render(request, 'school/registro_form.html', {'form': form, 'titulo': 'Editar Registro de Aluno', 'registro': registro})
+
+@login_required
+def registro_turma_edit(request, pk):
+    registro = get_object_or_404(RegistroTurma, pk=pk)
+    if request.method == 'POST':
+        form = RegistroTurmaForm(request.POST, instance=registro)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Registro de turma atualizado com sucesso.")
+            return redirect('registro_list')
+    else:
+        form = RegistroTurmaForm(instance=registro)
+    return render(request, 'school/registro_form.html', {'form': form, 'titulo': 'Editar Registro de Turma', 'registro': registro})
 
 @login_required
 def marcar_lido(request, pk):

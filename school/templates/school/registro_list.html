@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}Histórico de Registros - DiOn{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="text-primary font-weight-bold m-0"><i class="fa-solid fa-file-lines me-2"></i>Histórico de Registros</h2>
+    <div class="d-flex gap-2">
+        <a href="{% url 'registro_aluno_create' %}" class="btn btn-info text-white action-button">
+            <i class="fa-solid fa-user-plus me-1"></i> Reg. Aluno
+        </a>
+        <a href="{% url 'registro_turma_create' %}" class="btn btn-secondary action-button">
+            <i class="fa-solid fa-users-gear me-1"></i> Reg. Turma
+        </a>
+    </div>
+</div>
+
+<!-- Barra de Busca -->
+<div class="card card-custom mb-4">
+    <div class="card-body py-3">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-md-10">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                    <input type="text" name="q" class="form-control border-start-0" placeholder="Buscar por data, turma, aluno ou coordenador..." value="{{ search_query }}">
+                </div>
+            </div>
+            <div class="col-md-2 d-grid">
+                <button type="submit" class="btn btn-primary rounded-pill">Buscar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card card-custom">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped m-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Data</th>
+                        <th>Tipo</th>
+                        <th>Alvo (Aluno/Turma)</th>
+                        <th>Descrição</th>
+                        <th>Coordenador</th>
+                        <th class="text-end pe-4">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for registro in registros %}
+                    <tr>
+                        <td class="ps-4 align-middle font-weight-bold">{{ registro.data|date:"d/m/Y" }}</td>
+                        <td class="align-middle">
+                            {% if registro.turma %}
+                                <span class="badge bg-secondary rounded-pill"><i class="fa-solid fa-users me-1"></i> Turma</span>
+                            {% else %}
+                                <span class="badge bg-info text-white rounded-pill"><i class="fa-solid fa-user me-1"></i> Aluno</span>
+                            {% endif %}
+                        </td>
+                        <td class="align-middle">
+                            {% if registro.turma %}
+                                {{ registro.turma.nome }}
+                            {% else %}
+                                {% for aluno in registro.alunos.all|slice:":2" %}
+                                    {{ aluno.nome }}{% if not forloop.last %}, {% endif %}
+                                {% endfor %}
+                                {% if registro.alunos.count > 2 %}...{% endif %}
+                            {% endif %}
+                        </td>
+                        <td class="align-middle">
+                            <span class="text-muted small d-inline-block text-truncate" style="max-width: 200px;">
+                                {{ registro.descricao }}
+                            </span>
+                        </td>
+                        <td class="align-middle text-muted">{{ registro.criado_por.username|default:"Sistema" }}</td>
+                        <td class="text-end pe-4 align-middle">
+                            {% if registro.turma %}
+                                <a href="{% url 'registro_turma_edit' registro.pk %}" class="btn btn-sm btn-outline-primary rounded-circle" title="Editar"><i class="fa-solid fa-pen"></i></a>
+                            {% else %}
+                                <a href="{% url 'registro_aluno_edit' registro.pk %}" class="btn btn-sm btn-outline-primary rounded-circle" title="Editar"><i class="fa-solid fa-pen"></i></a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center p-5 text-muted">
+                            <i class="fa-solid fa-file-circle-question fa-3x mb-3 text-secondary"></i>
+                            <h5>Nenhum registro encontrado.</h5>
+                            <p>Tente mudar os termos da busca ou crie um novo registro.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

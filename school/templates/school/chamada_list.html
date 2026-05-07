@@ -10,6 +10,23 @@
     </a>
 </div>
 
+<!-- Barra de Busca -->
+<div class="card card-custom mb-4">
+    <div class="card-body py-3">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-md-10">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                    <input type="text" name="q" class="form-control border-start-0" placeholder="Buscar por data, turma ou coordenador..." value="{{ search_query }}">
+                </div>
+            </div>
+            <div class="col-md-2 d-grid">
+                <button type="submit" class="btn btn-primary rounded-pill">Buscar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div class="card card-custom">
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -45,8 +62,7 @@
                         </td>
                         <td class="align-middle text-muted">{{ chamada.criado_por.username|default:"Sistema" }}</td>
                         <td class="text-end pe-4 align-middle">
-                            <!-- Placeholder for View details -->
-                            <button class="btn btn-sm btn-outline-primary rounded-circle" title="Ver Detalhes"><i class="fa-solid fa-eye"></i></button>
+                            <a href="{% url 'chamada_detail' chamada.pk %}" class="btn btn-sm btn-outline-primary rounded-circle" title="Ver Detalhes"><i class="fa-solid fa-eye"></i></a>
                         </td>
                     </tr>
                     {% empty %}
